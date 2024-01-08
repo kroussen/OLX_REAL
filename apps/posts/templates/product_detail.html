@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Просмотр объявления</title>
+    <style>
+        /* Ваши пользовательские стили */
+        .bg-custom {
+            background-color: #01c4c8;
+        }  
+        /* Дополнительные стили для перемещения контактной информации */
+        .contact-info {
+            position: absolute;
+            bottom: 0%;
+            left: 4%;
+        }
+        /* Кастомные стили для кнопок */
+        .custom-buttons {
+            position: absolute;
+            bottom: 5%;
+            right: 3%;
+        }
+        /* Стили для кнопки "Избранное" */
+        .favorite-button {
+            position: absolute;
+            top: 8%; /* Отступ сверху */
+            right: 6%; /* Отступ справа */
+        }        
+    </style>
+    {% extends 'basic_connection.html' %}
+</head>
+{% block content %}
+<body class="bg-custom">
+    <div class="container mt-4"> <!-- Добавлен класс 'mt-5' для вертикального отступа -->
+        <div class="row justify-content-center"> <!-- Центрирование контейнера по горизонтали -->
+            <div class="col-md-12"> <!-- Ширина контейнера -->
+                <div> <!-- Добавлен контейнер для рамки с содержимым -->
+                    <div class="row">
+                        <div class="col-md-12 row">
+                            <!-- Заголовок товара -->
+                            <div style="flex: 0 0 auto; width: 5.70%;"></div>
+                            <div class="col-md-6 ps-0">
+                                <h1>{{ product.title }}</h1>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mt-4">
+                            {% if product.image %}
+                            <!-- Используйте product.image.url для отображения изображения -->
+                            <div style="width: 90%; margin-left: auto;">
+                                <img src="{{ product.image }}" class="bd-placeholder-img card-img-top" width="100%" height="100%" alt="{{ product.title }}">
+                            </div>
+                            {% else %}
+                                <img src="path_to_default_image.jpg" class="bd-placeholder-img card-img-top" width="100%" height="100%" alt="{{ product.title }}">
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 row justify-content-start">
+                            <div class="mt-4 position-relative border p-4 bg-white fw-bold" style="width: 90%;">
+                                <!-- Цена товара -->
+                                <div style="width: 50%;">
+                                    <p>Цена: {{ product.price }} $</p>
+                                    <!-- Описание товара -->
+                                    <p>Описание: {{ product.description }}</p>
+                                    <!-- Другие данные о товаре -->
+                                    <div class="contact-info">
+                                        <p>Продавец: {{ product.seller.username }}</p>
+                                        <p>Город: {{ product.city.name }}</p>
+                                    </div>
+
+                                    <div class="custom-buttons d-flex justify-content-end">
+                                        {% if is_product_creator %}
+                                            <form method="post" action="{% url 'posts:product_edit' product.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-primary mt-2 me-2" name="edit_product">Редактировать</button>
+                                            </form>
+                                        {% else %}
+                                            <form method="post" action="{% url 'posts:add_to_cart' product.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-success mt-2 me-2" name="add_to_cart">Добавить в корзину</button>
+                                            </form>
+
+                                            <form method="post" action="{% url 'posts:buy_now' product.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-primary mt-2" name="buy_now">Купить сейчас</button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+
+                                    <form method="post" action="{% url 'posts:add_to_favorites' product.id %}">
+                                        {% csrf_token %}
+                                        <!-- Используйте поле типа hidden для указания действия (добавление или удаление) -->
+                                        <input type="hidden" name="action" value="{% if is_favorited %}remove{% else %}add{% endif %}">
+                                        <!-- Используйте кнопку или изображение для обозначения избранного или неизбранного -->
+                                        {% if not is_product_creator %}
+                                            <button type="submit" class="favorite-button" style="background: none; border: none;">
+                                                {% if is_favorited %}
+                                                    <img src="https://www.pinclipart.com/picdir/big/569-5695514_heart-png-transparent-red-heart-vector-clipart.png" alt="Избранное" width="24" height="24" class="d-inline-block align-top">
+                                                {% else %}
+                                                    <img src="https://www.pngplay.com/wp-content/uploads/13/Favpng-PNG-Photo-Image.png" alt="Добавить в избранное" width="24" height="24" class="d-inline-block align-top">
+                                                {% endif %}
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+{% endblock %}
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройки профиля</title>
+    <style>
+        .avatar {
+            width: 200px; /* Задайте ширину и высоту, соответствующую вашим требованиям */
+            height: 200px;
+            border-radius: 50%; /* Добавляет скругление краев для создания круглой формы */
+            overflow: hidden; /* Обрезает изображение, чтобы оно соответствовало круглой рамке */
+        }
+        .avatar img {
+            width: 100%; /* Убедитесь, что изображение заполняет свою родительскую область */
+            height: auto;
+            display: block;
+        }
+        .bg-custom {
+            background-color: #01c4c8;
+        }
+    </style>
+    {% extends 'basic_connection.html' %}
+</head>
+{% block content %}
+<body class="bg-custom">
+    {% if messages %}
+    {% for message in messages %}
+        <div style="width: 15%; margin: 0 auto!important;" class="alert alert-danger py-1 px-2 mx-2 text-center" role="alert">
+            {{ message }}
+        </div>
+    {% endfor %}
+    {% endif %}
+    <main class="container text-center">
+        <h2 class="h1">Настройки профиля</h2>
+        <form method="POST" enctype="multipart/form-data" action="{% url 'profile_settings' %}" id="form_user">
+            {% csrf_token %}
+            {{ form.user_image }}
+            <div class="row">
+                <div class="col-md-4 p-3">
+                    <div class="p-3">
+
+                        {% if form.instance.user_image %}
+                            <img src="{{ user.user_image }}" id="userAvatar" alt="Avatar" class="img-fluid mb-3" style="border-radius: 50%; width: 80%;">
+                        {% endif %}
+                        <input 
+                            type="file" 
+                            class="form-control mb-3" 
+                            name="userImage"
+                            id="userImage"
+                            accept="image/*"
+                        >
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="row">
+                        <div class="col-md-6 p-3">
+                            <div class="border bg-white p-3">
+                                <label for="username" class="fw-bold">Имя</label>
+                                <input 
+                                    type="text" 
+                                    class="form-control mb-3" 
+                                    name="username" 
+                                    id="username" 
+                                    value="{{ user.username }}" 
+                                    aria-describedby="usernameHelp"
+                                >
+                            </div>
+                        </div>
+                        <div class="col-md-6 p-3">
+                            <div class="border bg-white p-3">
+                                <label for="email" class="fw-bold">Email</label>
+                                <input 
+                                    type="email" 
+                                    class="form-control mb-3" 
+                                    name="email" 
+                                    id="email" 
+                                    value="{{ user.email }}" 
+                                    aria-describedby="emailHelp"
+                                >
+                            </div>
+                        </div>
+                        <!-- Форма для изменения пароля -->
+                        <div class="col-md-6 p-3">
+                            <div class="border bg-white p-3">
+                                <label for="old_password" class="fw-bold">Введите старый пароль</label>
+                                <input 
+                                    type="password" 
+                                    class="form-control mb-3" 
+                                    name="old_password" 
+                                    id="old_password" 
+                                    aria-describedby="oldPasswordHelp"
+                                >
+                            </div>
+                        </div>
+                        <div class="col-md-6 p-3">
+                            <div class="border bg-white p-3">
+                                <label for="new_password1" class="fw-bold">Введите новый пароль</label>
+                                <input 
+                                    type="password" 
+                                    class="form-control mb-3" 
+                                    name="new_password1" 
+                                    id="new_password1" 
+                                    aria-describedby="newPasswordHelp"
+                                >
+                            </div>
+                        </div>
+                        <div class="col-md-6 p-3">
+                            <div class="border bg-white p-3">
+                                <label for="new_password2" class="fw-bold">Повторите новый пароль</label>
+                                <input 
+                                    type="password" 
+                                    class="form-control mb-3" 
+                                    name="new_password2" 
+                                    id="new_password2" 
+                                    aria-describedby="confirmNewPasswordHelp"
+                                >
+                            </div>
+                        </div>
+                        <div class="col-md-6 p-3">
+                            <div class="row justify-content-center mt-4">
+                                <div class="col-md-4">
+                                    <div class="p-3 text-center">
+                                        <button type="submit" data-testid="submit-btn" class="btn btn-success">Сохранить</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </main>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script>
+ //       document.getElementById('update-form').addEventListener('submit', function(event) {
+ //           event.preventDefault();
+
+  //          var form = this;
+  //          var url = form.getAttribute('action');
+ //           var formData = new FormData(form);
+
+ //           fetch(url, {
+ //               method: 'POST',
+ //               body: formData,
+ //               headers: {
+ //                   'X-Requested-With': 'XMLHttpRequest',
+ //                   'X-CSRFToken': '{{ csrf_token }}'
+ //               }
+//            })
+//            .then(response => response.json())
+//            .then(data => {
+ //               if (data.success) {
+ //                   document.getElementById('message').innerHTML = '<div class="alert alert-success">Информация успешно обновлена!</div>';
+  //              } else {
+ //                   document.getElementById('message').innerHTML = '<div class="alert alert-danger">Ошибка при обновлении информации</div>';
+//                }
+ //           })
+ //           .catch(error => {
+  //              console.error('Ошибка:', error);
+ //           });
+ //       });
+
+
+         $(document).ready(function () {
+
+            var image_status = false;
+
+            $('#userImage').on('change', function () {
+                var clientId = '7ef4a4ed6188f0f';
+                var apiUrl = 'https://api.imgur.com/3/image';
+                var fileInput = document.getElementById('userImage');
+                var imageFile = fileInput.files[0];
+
+                if (imageFile) {
+                    var formData = new FormData();
+                    formData.append('image', imageFile);
+
+                    $.ajax({
+                        url: apiUrl,
+                        type: 'POST',
+                        headers: {
+                            'Authorization': 'Client-ID ' + clientId,
+                        },
+                        data: formData,
+                        cache: false,
+                        contentType: false,
+                        processData: false,
+                        success: function(response) {
+                            var uploadedImageUrl = response.data.link;
+                            $("#image_status").css('display', 'none');
+                            $("#userAvatar").attr("src", uploadedImageUrl);
+                            document.getElementById('id_user_image').value = uploadedImageUrl;
+                            image_status = true;
+                        },
+                        error: function(error) {
+                            $("#image_status").html('Выберите другое изображение');
+                            image_status = false;
+                            $("#image_status").removeClass('text-success').addClass('text-danger').show();
+                        }
+                    });
+                } else {
+                    $("#image_status").show();
+                }
+            })
+        });
+    </script>
+</body>
+{% endblock %}
+</html>

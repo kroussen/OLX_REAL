@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создание объявления</title>
+    <style>
+        /* Ваши пользовательские стили */
+        .bg-custom {
+            background-color: #01c4c8;
+        }
+    </style>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    {% extends 'basic_connection.html' %}
+</head>
+{% block content %}
+<body class="bg-custom">
+    <main class="container text-center">
+        <h2 class="h1">Создать объявление</h2>
+        <form method="post" enctype="multipart/form-data" action="{% url 'posts:create_product' %}">
+            {% csrf_token %}
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <div>
+                            <div class="form-group border bg-white p-3">
+                                <label for="title" class="fw-bold">Укажите название</label>
+                                <textarea 
+                                    class="form-control" 
+                                    rows="1" 
+                                    name="title" 
+                                    id="title" 
+                                    aria-describedby="titleHelp" 
+                                    placeholder="Например, iPhone 11 с гарантией"
+                                    required
+                                ></textarea>
+                                <div class="invalid-feedback" id="titleError"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-md-6 p-3">
+                    <div class="border bg-white p-3 mt-2">
+                        <label for="price" class="fw-bold">Цена</label>
+                        <div class="input-group">
+                            <input
+                                autocomplete="off"
+                                type="text"
+                                name="price"
+                                id="price"
+                                placeholder="Введите цену"
+                                aria-describedby="price-addon"
+                                class="form-control"
+                                required
+                            >
+                            <div class="invalid-feedback" id="priceError"></div>
+                            <span class="input-group-text" id="price-addon">$</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="container mt-4">
+                <div class="row">
+                    <div class="col-md-6 mx-auto">
+                        <div class="border bg-white p-3">
+                            <div>
+                                <label for="title" class="fw-bold">Предпросмотр изображение</label>          
+                                <!-- Кнопка "Сгенерировать изображение" -->
+                                <div class="mb-3">
+                                    <button id="generate-image-btn" class="btn btn-primary">
+                                        Сгенерировать изображение
+                                    </button>
+                                </div>
+            
+                                <!-- Модальное окно загрузки -->
+                                <div class="modal" id="loading-modal" tabindex="-1" role="dialog">
+                                    <div class="modal-dialog modal-dialog-centered" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-body text-center">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="sr-only">Loading...</span>
+                                                </div>
+                                                <p class="mt-2">Подождите, идет создание изображения...</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+            
+                                <!-- Предпросмотр изображения -->
+                                <div id="image-preview"></div>
+                                <div class="invalid-feedback" id="imageError"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div data-testid="description-widget" class="container mt-4">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <div class="border bg-white p-3">
+                            <label for="description" class="fw-bold">Описание</label>
+                            <div class="input-group">
+                                <textarea
+                                    aria-invalid="false"
+                                    autocomplete="off"
+                                    rows="11"
+                                    name="description"
+                                    id="description"
+                                    placeholder="Подумайте, какие подробности вы хотели бы узнать из объявления. И добавьте их в описание"
+                                    class="form-control mt-2"
+                                    required
+                                ></textarea>
+                                <div class="invalid-feedback" id="descriptionError"></div>
+                            </div>
+                            <div class="mt-2">
+                                <div data-testid="description-progress" class="progress">
+                                    <div 
+                                        class="progress-bar" 
+                                        role="progressbar" 
+                                        style="width: 0%;" 
+                                        aria-valuenow="0" 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="100">Напишите еще 40 символов</div>
+                                </div>
+                                <span class="fw-bold">0 / 9000</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div data-testid="location-widget" class="container mt-4">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <div class="border bg-white p-3">
+                            <label for="location" class="fw-bold">Местоположение</label>
+                            <div class="input-group">
+                                <input
+                                    autocomplete="off"
+                                    type="text"
+                                    data-cy="location-search-input"
+                                    data-testid="autosuggest-location-search-input"
+                                    aria-label="Название города или индекс"
+                                    placeholder="Название города или индекс"
+                                    aria-describedby=""
+                                    name="city_id"
+                                    id="location"
+                                    class="form-control mt-2"
+                                    list="suggestions"
+                                    required
+                                >
+                                <div class="invalid-feedback" id="locationError"></div>
+                                <div class="dropdown-menu" id="suggestions" aria-labelledby="location">
+                                    <datalist id="suggestions"></datalist> <!-- Элемент для отображения предложений -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div data-testid="contact-widget" class="container mt-4">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <div class="border bg-white p-3">
+                            <h4 class="fw-bold">Контактная информация</h4>
+                            <div class="form-group">
+                                <label for="person">Контактное лицо</label>
+                                <!-- Предзаполнение поля 'Контактное лицо' значением имени текущего пользователя -->
+                                <input 
+                                    autocomplete="off" 
+                                    type="text" 
+                                    aria-required="true" 
+                                    data-testid="person" 
+                                    data-cy="person" 
+                                    id="person" 
+                                    name="person" 
+                                    class="form-control" 
+                                    value="{{ request.user.username }}"
+                                >
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email-адрес</label>
+                                <!-- Предзаполнение поля 'Email-адрес' значением email'а текущего пользователя -->
+                                <input 
+                                    autocomplete="off" 
+                                    type="email" 
+                                    id="email" 
+                                    disabled class="form-control" 
+                                    value="{{ request.user.email }}"
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="container mt-2">
+                <div class="row">
+                    <div class="mx-auto">
+                        <div class="p-3">
+                            <div class="d-flex justify-content-center">
+                                <button type="submit" data-testid="submit-btn" class="btn btn-success">Опубликовать</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+            }
+        });        
+        // Проверка на обязательные поля
+        $(document).ready(function() {
+            function validateForm() {
+                let isValid = true;
+                $('form input, form textarea').each(function() {
+                    if (!$(this).val().trim()) {
+                        $(this).addClass('is-invalid');
+                        $(this).siblings('.invalid-feedback').text('Обязательное поле');
+                        isValid = false;
+                    } else {
+                        $(this).removeClass('is-invalid');
+                        $(this).siblings('.invalid-feedback').text('');
+                    }
+                });
+                return isValid;
+            }
+        
+            $('form').submit(function(event) {
+                if (!validateForm()) {
+                    event.preventDefault();
+                    // Дополнительные действия при невалидной форме
+                }
+            });
+        
+            $('form input, form textarea').on('input', function() {
+                $(this).removeClass('is-invalid');
+                $(this).siblings('.invalid-feedback').text('');
+            });
+        });
+
+
+        // Выбор Города
+        $(document).ready(function(){
+            // При выборе города из списка
+            $('#suggestions').on('click', 'a.dropdown-item', function(e) {
+                e.preventDefault(); // Предотвращаем стандартное поведение ссылки
+
+                var selectedCity = $(this).text(); // Получаем выбранный город
+                $('#location').val(selectedCity); // Заполняем поле "Местоположение*" выбранным городом
+
+                $('#suggestions').removeClass('show'); // Скрываем выпадающий список
+            });
+        
+            $('#location').on('input', function(){
+                var query = $(this).val();
+                if(query.length > 0){
+                    $.ajax({
+                        url: '/main/get_cities/',
+                        method: 'GET',
+                        data: { 'query': query },
+                        success: function(data) {
+                            var cities = data.cities;
+                            var suggestions = '';
+                            for (var i = 0; i < cities.length; i++) {
+                                suggestions += '<a class="dropdown-item" href="#">' + cities[i] + '</a>';
+                            }
+                            $('#suggestions').html(suggestions);
+                            $('#suggestions').addClass('show'); // Показываем выпадающий список
+                        },
+                        error: function(xhr, errmsg, err) {
+                            console.log(xhr.status + ": " + xhr.responseText);
+                        }
+                    });
+                }
+            });
+        
+            // Закрытие выпадающего списка при клике за его пределами
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.dropdown-menu').length) {
+                    $('#suggestions').removeClass('show');
+                }
+            });
+        });
+
+
+        // Рабочий, на случай если мой не подойдёт
+        // $(document).ready(function() {     
+
+        //     async function getModel() {
+        //         const response = await fetch('https://api-key.fusionbrain.ai/key/api/v1/models', {
+        //             method: 'GET',
+        //             headers: {
+        //                 'X-Key': '' # Token OpenAI,
+        //                 'X-Secret': '' # Secret token OPENAI,
+        //             },
+        //         });
+
+        //         const data = await response.json();
+        //         return data[0].id;
+        //     }
+
+        //     async function checkGeneration(requestId, attempts = 10, delay = 10) {
+        //         while (attempts > 0) {
+        //             const response = await fetch(`https://api-key.fusionbrain.ai/key/api/v1/text2image/status/${requestId}`, {
+        //                 method: 'GET',
+        //                 headers: {
+        //                     'X-Key': 'Key D3F2D3709F9F7A6B52A04E7E9B1036D9',
+        //                     'X-Secret': 'Secret DC1FD5CD6FE0FA07901D1351B38C28B2',
+        //                 },
+        //             });
+
+        //             const data = await response.json();
+
+        //             if (data.status === 'DONE') {
+        //                 return data.images;
+        //             }
+
+        //             attempts -= 1;
+        //             await new Promise(resolve => setTimeout(resolve, delay * 1000)); // Ожидаем delay секунд перед следующей попыткой
+        //         }
+
+        //         // Возвращаем null, если не удалось получить результат после заданного числа попыток
+        //         return null;
+        //     }
+
+        //     function validateForm() {
+        //         const title = $('#title').val();
+        //         const description = $('#description').val();
+        //         const price = $('#price').val();
+        //         const location = $('#location').val();
+
+        //         if (title.trim() === '' || description.trim() === '' || price.trim() === '' || location.trim() === '') {
+        //             alert('Пожалуйста, заполните все поля.');
+        //             return false;
+        //         }
+        //         return true;
+        //     }           
+        //     // Обработчик события для кнопки "Сгенерировать изображение"
+        //     $('#generate-image-btn').on('click', async function(event) {
+        //         event.preventDefault();
+        //         var productDescription = $('#description').val();
+        //         if (validateForm()) {
+        //             $('#loading-modal').modal('show');
+        //             try {
+        //                 const modelId = await getModel();
+        //                 const formData = new FormData();
+        //                 formData.append('params', new Blob([JSON.stringify({
+        //                     type: 'GENERATE',
+        //                     generateParams: {
+        //                         query: productDescription,
+        //                     },
+        //                 })], { type: 'application/json' }));
+        //                 formData.append('model_id', modelId);
+
+        //                 const response = await fetch('https://api-key.fusionbrain.ai/key/api/v1/text2image/run', {
+        //                     method: 'POST',
+        //                     headers: {
+        //                         'X-Key': 'Key D3F2D3709F9F7A6B52A04E7E9B1036D9',
+        //                         'X-Secret': 'Secret DC1FD5CD6FE0FA07901D1351B38C28B2',
+        //                     },
+        //                     body: formData,
+        //                 });
+
+        //                 const result = await response.json();
+        //                 const requestId = result['uuid'];
+        //                 const generatedImages = await checkGeneration(requestId);
+
+        //                 if (generatedImages) {
+        //                     generatedImageUrl = generatedImages[0];
+        //                     $('#image-preview').html(`<img src="data:image/png;base64, ${generatedImageUrl}" class="img-fluid" alt="Preview Image">`);
+        //                     $('#loading-modal').modal('hide');
+        //                 } else {
+        //                     console.error('Image not found');
+        //                     $('#loading-modal').modal('hide');
+        //                 }
+        //             } catch (error) {
+        //                 console.error('Ошибка при запросе к OpenAI API:', error);
+        //                 $('#loading-modal').modal('hide');
+        //             }
+        //         }
+        //     });
+
+        //     // Обработчик события для кнопки "Отправить данные"
+        //     $('#send-data').on('click', function(event) {
+        //         event.preventDefault();
+
+        //         if (validateForm()) {
+        //             // Если изображение было сгенерировано, отправляем его вместе с данными на сервер
+        //             sendDataToServer();
+        //         }
+        //     });
+
+        //     function sendDataToServer() {
+        //         if (validateForm()) {
+        //             $.ajax({
+        //                 url: '/main/create/',
+        //                 method: 'POST',
+        //                 contentType: 'application/json',
+        //                 data: JSON.stringify({
+        //                     title: $('#title').val(),
+        //                     description: $('#description').val(),
+        //                     image: generatedImageUrl,
+        //                     price: $('#price').val(),
+        //                     location: $('#location').val(),
+        //                 }),
+        //                 success: function(response) {
+        //                     console.log('Data successfully sent to the server!');
+        //                 },
+        //                 error: function(error) {
+        //                     console.error('Error sending data to the server:', error);
+        //                 },
+        //                 complete: function(xhr, status) {
+        //                     console.log(xhr.status);
+        //                     if (xhr.status === 200 && xhr.responseJSON && xhr.responseJSON.redirect_url) {
+        //                         window.location.href = xhr.responseJSON.redirect_url;
+        //                     }
+        //                 }
+        //             });
+        //         }
+        //     }     
+        // })
+
+
+
+
+        // Моя генерация
+        // Генерация изображения
+        $(document).ready(function() {
+            // Обработчик события для кнопки "Сгенерировать изображение"
+            $('#generate-image-btn').on('click', function(event) {
+                event.preventDefault(); // Предотвращаем стандартное поведение кнопки
+            
+                // Получение текста из поля ввода "Укажите название"
+                var productTitle = $('#title').val();
+            
+                // Получение текста из поля ввода "Описание"
+                var productDescription = $('#description').val();
+            
+                // Показать модальное окно загрузки
+                $('#loading-modal').modal('show');
+            
+                // Запрос к OpenAI API для генерации изображения
+                $.ajax({
+                    url: 'https://api.openai.com/v1/images/generations',
+                    type: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer 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',
+                    },
+                    data: JSON.stringify({
+                        prompt: productTitle + '. ' + productDescription, // Используем тексты из обоих полей для генерации изображения
+                        model: "dall-e-3",
+                        n: 1,
+                        size: "1024x1024",
+                        response_format: "url"
+                    }),
+                    success: function(response) {
+                        var imageUrl = response.data[0].url; // Получаем URL сгенерированного изображения
+
+                        // Скрыть модальное окно загрузки
+                        $('#loading-modal').modal('hide');
+
+                        // Отобразить предпросмотр изображения
+                        $('#image-preview').html(`<img src="${imageUrl}" class="img-fluid" alt="Preview Image">`);
+
+                        // Отправить изображение на сервер
+                        sendDataToServer(imageUrl);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Ошибка при запросе к OpenAI API:', error);
+                        console.log('Статус ошибки:', xhr.status);
+                        console.log('Текст ошибки:', xhr.statusText);
+                        console.log('Детали ошибки:', xhr.responseText);
+                        // Скрыть модальное окно загрузки в случае ошибки
+                        $('#loading-modal').modal('hide');
+                    }
+                });
+            });
+        
+            // Отправка изображения на сервер
+            function sendDataToServer(imageUrl) {
+                $.ajax({
+                    url: '/main/get_image/',
+                    method: 'POST',
+                    data: {'image_url': imageUrl},
+                    success: (response) => {
+                        console.log('Изображение успешно сохранено на сервере!');
+                    },
+                    error: (error) => {
+                        console.error('Ошибка при отправке изображения на сервер:', error);
+                    }
+                });
+            }
+        });        
+    </script>
+    <!-- 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 -->
+    <!-- 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 -->
+</body>
+{% endblock %}
+</html>
